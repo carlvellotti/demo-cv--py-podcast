@@ -4,6 +4,26 @@ Using [Taylor Wilsdon's google_workspace_mcp](https://github.com/taylorwilsdon/g
 
 ---
 
+## Part 0: Prerequisites
+
+### Step 0.1: Install Python 3.10+
+
+You need Python 3.10 or higher. On macOS:
+
+```bash
+brew install python
+```
+
+Verify with:
+```bash
+python3 --version   # Should be 3.10+
+pip3 --version
+```
+
+**Important:** Use `pip3`, not `pip` - the latter may point to an older Python version.
+
+---
+
 ## Part 1: Google Cloud Console Setup
 
 ### Step 1.1: Create a Google Cloud Project
@@ -60,7 +80,7 @@ Enable these APIs (click each link while signed into your project):
 
 ---
 
-### Step 1.5: Add Yourself as a Test User
+### Step 1.4: Add Yourself as a Test User
 
 1. Go to [console.cloud.google.com/auth/audience](https://console.cloud.google.com/auth/audience)
 2. Under "Test users", click "+ Add users"
@@ -89,16 +109,19 @@ Enable these APIs (click each link while signed into your project):
 Open terminal and run:
 
 ```bash
-# Option A: Using uvx (recommended)
-uvx workspace-mcp --help
+pip3 install workspace-mcp
+```
 
-# Option B: Using pip
-pip install workspace-mcp
+Verify installation:
+```bash
+which workspace-mcp
+workspace-mcp --help
 ```
 
 **Notes from testing:**
-- `pip install workspace-mcp` installs to `~/.local/bin/workspace-mcp`
-- `uvx` may not work in MCP context - use full path instead
+- Must use `pip3`, not `pip` (pip may point to older Python)
+- Binary typically installs to `/Library/Frameworks/Python.framework/Versions/3.11/bin/workspace-mcp` or `~/.local/bin/workspace-mcp`
+- Run `which workspace-mcp` to find the exact path for your system
 
 ---
 
@@ -111,7 +134,7 @@ Create or edit `.mcp.json` in your project root:
   "mcpServers": {
     "google-workspace": {
       "type": "stdio",
-      "command": "/Users/YOUR_USERNAME/.local/bin/workspace-mcp",
+      "command": "/path/from/which/workspace-mcp",
       "args": [],
       "env": {
         "GOOGLE_OAUTH_CLIENT_ID": "YOUR_CLIENT_ID_HERE",
@@ -123,12 +146,12 @@ Create or edit `.mcp.json` in your project root:
 ```
 
 Replace:
-- `YOUR_USERNAME` with your macOS username
-- Credentials from downloaded JSON or Step 1.5
+- `/path/from/which/workspace-mcp` with the output from `which workspace-mcp`
+- Credentials from downloaded JSON (Step 1.5)
 
 **Notes from testing:**
-- Use full path, not `uvx` - MCP may not have uvx in PATH
-- Find your path: `which workspace-mcp` or check `~/.local/bin/`
+- Must use full path - run `which workspace-mcp` to get it
+- Common paths: `/Library/Frameworks/Python.framework/Versions/3.11/bin/workspace-mcp` or `~/.local/bin/workspace-mcp`
 
 ---
 
@@ -164,6 +187,7 @@ Try these commands:
 
 | Step | Estimated | Actual |
 |------|-----------|--------|
+| 0.1 Install Python | 1 min | |
 | 1.1 Create project | 1 min | |
 | 1.2 Enable APIs | 3-5 min | |
 | 1.3 OAuth consent | 1 min | |
@@ -172,7 +196,7 @@ Try these commands:
 | 2.1 Install MCP | 1 min | |
 | 2.2 Configure | 1 min | |
 | 2.3 Authenticate | 1 min | |
-| **Total** | **10-12 min** | |
+| **Total** | **11-13 min** | |
 
 ---
 
