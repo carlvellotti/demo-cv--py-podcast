@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrate with Moltbot | Developer Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --terminal-green: #00ff9d;
+            --terminal-green-dim: #00cc7d;
+            --terminal-green-glow: rgba(0, 255, 157, 0.15);
+            --terminal-amber: #ffb800;
+            --terminal-cyan: #00d4ff;
+            --terminal-magenta: #ff00aa;
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --text-primary: #e8e8e8;
+            --text-muted: #888;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(0, 255, 157, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Scanline overlay effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.3;
+        }
+
+        /* Noise texture overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--terminal-green);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: '>';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--terminal-green);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--terminal-green);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: transparent;
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            padding: 0.75rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-cta:hover {
+            background: var(--terminal-green);
+            color: var(--bg-primary);
+            box-shadow: 0 0 30px var(--terminal-green-glow);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 8rem 3rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Grid background */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 157, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+        }
+
+        /* Floating orb */
+        .hero-orb {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            right: -100px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: radial-gradient(circle at 30% 30%,
+                var(--terminal-green-glow) 0%,
+                rgba(0, 212, 255, 0.05) 40%,
+                transparent 70%
+            );
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-55%) translateX(-20px); }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            padding: 0.5rem 1rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge .star-count {
+            color: var(--terminal-amber);
+            font-weight: 600;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            line-height: 1.05;
+            margin-bottom: 1.5rem;
+            animation: slideIn 0.6s ease-out 0.1s both;
+        }
+
+        .hero-title .highlight {
+            color: var(--terminal-green);
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero-title .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0.1em;
+            left: 0;
+            right: 0;
+            height: 0.15em;
+            background: var(--terminal-green);
+            opacity: 0.3;
+        }
+
+        .hero-subtitle {
+            font-size: 1.35rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            line-height: 1.7;
+            margin-bottom: 3rem;
+            animation: slideIn 0.6s ease-out 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            animation: slideIn 0.6s ease-out 0.3s both;
+        }
+
+        .btn-primary {
+            background: var(--terminal-green);
+            color: var(--bg-primary);
+            border: none;
+            padding: 1.1rem 2.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 255, 157, 0.3);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 1.1rem 2.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--terminal-green);
+            color: var(--terminal-green);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 4rem;
+            margin-top: 5rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--border-subtle);
+            animation: slideIn 0.6s ease-out 0.4s both;
+        }
+
+        .stat {
+            text-align: left;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--terminal-green);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Section Styling */
+        section {
+            padding: 7rem 3rem;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 5rem;
+        }
+
+        .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--terminal-green);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .section-title {
+            font-size: 2.75rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        /* Benefits Section */
+        .benefits {
+            background: var(--bg-secondary);
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .benefit-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 2.5rem;
+            position: relative;
+            transition: all 0.4s ease;
+            overflow: hidden;
+        }
+
+        .benefit-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: var(--terminal-green);
+            transition: height 0.4s ease;
+        }
+
+        .benefit-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-4px);
+        }
+
+        .benefit-card:hover::before {
+            height: 100%;
+        }
+
+        .benefit-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--terminal-green);
+        }
+
+        .benefit-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .benefit-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* How It Works Section */
+        .process {
+            background: var(--bg-primary);
+        }
+
+        .process-steps {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .process-step {
+            flex: 1;
+            min-width: 280px;
+            max-width: 340px;
+            text-align: center;
+            position: relative;
+        }
+
+        .process-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -2rem;
+            top: 2.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--terminal-green);
+            opacity: 0.5;
+        }
+
+        @media (max-width: 900px) {
+            .process-step:not(:last-child)::after {
+                display: none;
+            }
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--terminal-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--terminal-green);
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+
+        .step-number::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border: 1px solid var(--terminal-green);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--terminal-green);
+            background: var(--bg-secondary);
+            padding: 0.75rem 1rem;
+            margin-top: 1rem;
+            border-left: 2px solid var(--terminal-green);
+            text-align: left;
+        }
+
+        .step-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Trust Section */
+        .trust {
+            background: var(--bg-secondary);
+            text-align: center;
+        }
+
+        .trust-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+            opacity: 0.6;
+        }
+
+        .trust-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trust-logo .icon {
+            font-size: 1.4rem;
+        }
+
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .testimonial {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 2rem;
+            text-align: left;
+            position: relative;
+        }
+
+        .testimonial::before {
+            content: '"';
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-family: Georgia, serif;
+            font-size: 4rem;
+            color: var(--terminal-green);
+            opacity: 0.15;
+            line-height: 1;
+        }
+
+        .testimonial-text {
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--terminal-green), var(--terminal-cyan));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--bg-primary);
+            font-size: 1.1rem;
+        }
+
+        .author-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .author-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .author-role {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* CTA Section */
+        .cta {
+            background: var(--bg-primary);
+            text-align: center;
+            padding: 8rem 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--terminal-green-glow) 0%, transparent 60%);
+            opacity: 0.5;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 10;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+
+        .cta-desc {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        .cta-terminal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            padding: 1.5rem 2rem;
+            margin: 3rem auto 0;
+            max-width: 500px;
+            text-align: left;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .terminal-line {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .terminal-prompt {
+            color: var(--terminal-green);
+        }
+
+        .terminal-cmd {
+            color: var(--text-primary);
+        }
+
+        .terminal-comment {
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            padding: 4rem 3rem 2rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 3rem;
+        }
+
+        .footer-brand {
+            max-width: 300px;
+        }
+
+        .footer-brand .logo {
+            margin-bottom: 1rem;
+        }
+
+        .footer-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 5rem;
+        }
+
+        .footer-col h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-col a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover {
+            color: var(--terminal-green);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 3rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-copyright {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-social a {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+
+        .footer-social a:hover {
+            color: var(--terminal-green);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 6rem 1.5rem 3rem;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            section {
+                padding: 4rem 1.5rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .footer-content {
+                flex-direction: column;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 2rem;
+            }
+        }
+
+        /* Scroll animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <a href="#" class="logo">moltbot</a>
+        <ul class="nav-links">
+            <li><a href="#benefits">Benefits</a></li>
+            <li><a href="#process">How It Works</a></li>
+            <li><a href="#trust">Developers</a></li>
+            <li><a href="https://github.com/moltbot/moltbot">GitHub</a></li>
+            <li><a href="https://docs.moltbot.io">Docs</a></li>
+        </ul>
+        <button class="nav-cta">Start Building</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-orb"></div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="star-count">85,000+</span> GitHub Stars
+                <span style="color: var(--terminal-green);">|</span>
+                Open Source
+            </div>
+            <h1 class="hero-title">
+                Build for <span class="highlight">Moltbot</span>.<br>
+                Reach millions.
+            </h1>
+            <p class="hero-subtitle">
+                Join the fastest-growing AI assistant ecosystem. Ship your integration to 85,000+ developers and their end users across WhatsApp, Telegram, Slack, Discord, Signal, and iMessage.
+            </p>
+            <div class="hero-actions">
+                <button class="btn-primary">Start Your Integration</button>
+                <button class="btn-secondary">
+                    <span>View Documentation</span>
+                    <span style="font-family: 'JetBrains Mono';">→</span>
+                </button>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-value">100+</div>
+                    <div class="stat-label">Skills on ClawdHub</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Platform Integrations</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">14 days</div>
+                    <div class="stat-label">Avg. Time to Launch</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits" id="benefits">
+        <div class="section-header reveal">
+            <span class="section-label">// Why Build on Moltbot</span>
+            <h2 class="section-title">Everything you need to ship fast</h2>
+            <p class="section-desc">
+                From API access to marketplace distribution, we've built the infrastructure so you can focus on what matters.
+            </p>
+        </div>
+        <div class="benefits-grid">
+            <div class="benefit-card reveal">
+                <div class="benefit-icon">{}</div>
+                <h3 class="benefit-title">Powerful API Access</h3>
+                <p class="benefit-desc">
+                    Full REST and WebSocket APIs with comprehensive SDKs for Python, Node.js, Go, and Rust. Handle messages, manage state, and integrate with any external service.
+                </p>
+            </div>
+            <div class="benefit-card reveal">
+                <div class="benefit-icon">⬡</div>
+                <h3 class="benefit-title">ClawdHub Marketplace</h3>
+                <p class="benefit-desc">
+                    Get discovered by 85,000+ developers. Featured listings, ratings, reviews, and built-in analytics to understand how your skill performs.
+                </p>
+            </div>
+            <div class="benefit-card reveal">
+                <div class="benefit-icon">◈</div>
+                <h3 class="benefit-title">Real-time Analytics</h3>
+                <p class="benefit-desc">
+                    Track installs, active users, message volume, and error rates from a unified dashboard. Export data or integrate with your existing tools.
+                </p>
+            </div>
+            <div class="benefit-card reveal">
+                <div class="benefit-icon">⊡</div>
+                <h3 class="benefit-title">Multi-Platform by Default</h3>
+                <p class="benefit-desc">
+                    Write once, deploy everywhere. Your skill automatically works across WhatsApp, Telegram, Slack, Discord, Signal, and iMessage.
+                </p>
+            </div>
+            <div class="benefit-card reveal">
+                <div class="benefit-icon">△</div>
+                <h3 class="benefit-title">Self-Hosted First</h3>
+                <p class="benefit-desc">
+                    Users run Moltbot locally. That means your skill runs on their infrastructure, respecting their privacy and reducing your ops burden.
+                </p>
+            </div>
+            <div class="benefit-card reveal">
+                <div class="benefit-icon">◇</div>
+                <h3 class="benefit-title">Revenue Share Program</h3>
+                <p class="benefit-desc">
+                    Monetize premium features with our built-in payment system. Keep 85% of revenue. We handle billing, taxes, and refunds.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="process" id="process">
+        <div class="section-header reveal">
+            <span class="section-label">// How It Works</span>
+            <h2 class="section-title">Three steps to launch</h2>
+            <p class="section-desc">
+                From zero to marketplace in under two weeks. Our tooling handles the hard parts.
+            </p>
+        </div>
+        <div class="process-steps">
+            <div class="process-step reveal">
+                <div class="step-number">01</div>
+                <h3 class="step-title">Register</h3>
+                <p class="step-desc">
+                    Create your developer account and get your API credentials. Access sandbox environments instantly.
+                </p>
+                <div class="step-code">
+                    $ moltbot init my-skill<br>
+                    <span style="color: var(--text-muted);"># Creates skill scaffold</span>
+                </div>
+            </div>
+            <div class="process-step reveal">
+                <div class="step-number">02</div>
+                <h3 class="step-title">Build</h3>
+                <p class="step-desc">
+                    Use our SDKs and CLI tools to develop locally. Hot-reload in dev mode. Test across all platforms.
+                </p>
+                <div class="step-code">
+                    $ moltbot dev --watch<br>
+                    <span style="color: var(--text-muted);"># Live reload enabled</span>
+                </div>
+            </div>
+            <div class="process-step reveal">
+                <div class="step-number">03</div>
+                <h3 class="step-title">Publish</h3>
+                <p class="step-desc">
+                    Submit for review. Once approved, your skill goes live on ClawdHub for the entire community.
+                </p>
+                <div class="step-code">
+                    $ moltbot publish<br>
+                    <span style="color: var(--text-muted);"># Submitted for review</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Section -->
+    <section class="trust" id="trust">
+        <div class="section-header reveal">
+            <span class="section-label">// Trusted By Developers</span>
+            <h2 class="section-title">Built by the community, for the community</h2>
+        </div>
+        <div class="trust-logos reveal">
+            <div class="trust-logo"><span class="icon">◆</span> WhatsApp</div>
+            <div class="trust-logo"><span class="icon">◆</span> Telegram</div>
+            <div class="trust-logo"><span class="icon">◆</span> Slack</div>
+            <div class="trust-logo"><span class="icon">◆</span> Discord</div>
+            <div class="trust-logo"><span class="icon">◆</span> Signal</div>
+            <div class="trust-logo"><span class="icon">◆</span> iMessage</div>
+        </div>
+        <div class="testimonials reveal">
+            <div class="testimonial">
+                <p class="testimonial-text">
+                    Shipped our first Moltbot skill in 8 days. The SDK is incredibly well-designed, and the multi-platform support just works. Our user engagement doubled overnight.
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">SK</div>
+                    <div class="author-info">
+                        <span class="author-name">Sarah Kim</span>
+                        <span class="author-role">CTO, CalendarSync</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">
+                    The ClawdHub marketplace gave us distribution we could never have built ourselves. 12,000 installs in the first month. The analytics dashboard is chef's kiss.
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">MP</div>
+                    <div class="author-info">
+                        <span class="author-name">Marcus Petrov</span>
+                        <span class="author-role">Founder, DevOps Bot</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">
+                    As a solo developer, I was skeptical. But the Moltbot team's support is unreal. Got featured on ClawdHub within a week of launching. This is the real deal.
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">JL</div>
+                    <div class="author-info">
+                        <span class="author-name">Jamie Liu</span>
+                        <span class="author-role">Indie Developer</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-content reveal">
+            <h2 class="cta-title">Ready to build?</h2>
+            <p class="cta-desc">
+                Join the Moltbot developer community. Get access to our APIs, SDKs, and the ClawdHub marketplace today.
+            </p>
+            <button class="btn-primary">Start Your Integration</button>
+            <div class="cta-terminal">
+                <div class="terminal-line">
+                    <span class="terminal-prompt">$</span>
+                    <span class="terminal-cmd">npx create-moltbot-skill my-first-skill</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="terminal-comment"># Get started in under 60 seconds</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <a href="#" class="logo">moltbot</a>
+                <p class="footer-desc">
+                    The open-source AI assistant that runs everywhere. Built by developers, for developers.
+                </p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Developers</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">SDK Downloads</a></li>
+                        <li><a href="#">ClawdHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="#">Discord</a></li>
+                        <li><a href="#">GitHub</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Privacy</a></li>
+                        <li><a href="#">Terms</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span class="footer-copyright">© 2026 Moltbot. MIT License.</span>
+            <div class="footer-social">
+                <a href="#">GH</a>
+                <a href="#">TW</a>
+                <a href="#">DC</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll reveal animation
+        const reveals = document.querySelectorAll('.reveal');
+
+        const revealOnScroll = () => {
+            reveals.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('active');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
