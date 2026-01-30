@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "google-workspace": {
+      "type": "stdio",
+      "command": "~/.local/bin/workspace-mcp",
+      "env": {
+        "GOOGLE_OAUTH_CLIENT_ID": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+        "GOOGLE_OAUTH_CLIENT_SECRET": "YOUR_CLIENT_SECRET"
+      }
+    }
+  }
+}

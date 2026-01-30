@@ -51,42 +51,34 @@ Enable these APIs (click each link while signed into your project):
 ### Step 1.3: Configure OAuth Consent Screen
 
 1. Go to [APIs & Services → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
-2. Select "External" (unless you have Google Workspace, then "Internal")
-3. Click "Create"
-4. Fill in:
-   - App name: `Claude Workspace MCP`
-   - User support email: your email
-   - Developer contact email: your email
-5. Click "Save and Continue"
-6. Scopes page: Click "Save and Continue" (we'll use default scopes)
-7. Test users: Add your email address
-8. Click "Save and Continue"
-
-**Time estimate:** ~2 min
-
-**Notes from testing:**
-- New UI: Click "Get started" first
-- Left sidebar has: Overview, Branding, Audience, Clients
-- Go to "Audience" to add test users
-- Skip "Scopes" - not in new UI flow
+2. Click "Get started"
+3. Enter App name: `Claude Workspace MCP`
+4. Enter User support email: your email
+5. Select Audience: "External" (unless you have Google Workspace, then "Internal")
+6. Enter Developer contact email: your email
+7. Click "Create"
 
 ---
 
-### Step 1.4: Create OAuth Credentials
+### Step 1.5: Add Yourself as a Test User
+
+1. Go to [console.cloud.google.com/auth/audience](https://console.cloud.google.com/auth/audience)
+2. Under "Test users", click "+ Add users"
+3. Enter your email address
+4. Click "Save"
+
+**Important:** You must add yourself as a test user or authentication will fail later.
+
+---
+
+### Step 1.5: Create OAuth Credentials
 
 1. Go to [APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials)
 2. Click "+ Create Credentials" → "OAuth client ID"
 3. Application type: **Desktop app**
 4. Name: `Claude Code`
 5. Click "Create"
-6. **Copy the Client ID and Client Secret** - you'll need these!
-
-**Time estimate:** ~1 min
-
-**Notes from testing:**
-- Go to "Clients" in left sidebar
-- Click "+ Create Client"
-- Can download JSON file with credentials
+6. Click "Download JSON" to save your credentials file
 
 ---
 
@@ -132,7 +124,7 @@ Create or edit `.mcp.json` in your project root:
 
 Replace:
 - `YOUR_USERNAME` with your macOS username
-- Credentials from downloaded JSON or Step 1.4
+- Credentials from downloaded JSON or Step 1.5
 
 **Notes from testing:**
 - Use full path, not `uvx` - MCP may not have uvx in PATH
@@ -174,8 +166,9 @@ Try these commands:
 |------|-----------|--------|
 | 1.1 Create project | 1 min | |
 | 1.2 Enable APIs | 3-5 min | |
-| 1.3 OAuth consent | 2 min | |
-| 1.4 Create credentials | 1 min | |
+| 1.3 OAuth consent | 1 min | |
+| 1.4 Add test user | 1 min | |
+| 1.5 Create credentials | 1 min | |
 | 2.1 Install MCP | 1 min | |
 | 2.2 Configure | 1 min | |
 | 2.3 Authenticate | 1 min | |

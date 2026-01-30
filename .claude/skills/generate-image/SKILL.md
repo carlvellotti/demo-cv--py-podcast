@@ -13,7 +13,7 @@ Or: "Generate an image of..." / "Create a visual for..."
 ## What It Does
 
 1. Takes your prompt and generates an image via Gemini 3 Pro Image
-2. Saves output to `outputs/` directory
+2. Saves output to `tools/image_gen/outputs/` directory
 3. Maintains session for multi-turn refinement
 4. Supports reference images for style guidance
 
@@ -22,7 +22,8 @@ Or: "Generate an image of..." / "Create a visual for..."
 Uses `.scripts/image_gen.py` which provides:
 
 ```python
-from _Scripts.image_gen import generate, new_session, revert
+import sys; sys.path.insert(0, '.scripts')
+from image_gen import generate, new_session, revert
 
 # Generate new image
 generate("a PM dashboard with dark mode", output_name="dashboard")
@@ -67,8 +68,9 @@ When the user asks you to generate an image:
 
 1. **Run the generation:**
    ```bash
-   cd "/Users/carl/Documents/Carl's Life OS" && python3 -c "
-   from _Scripts.image_gen import generate
+   cd "/Users/carl/Documents/Carl's Life OS/📦 Projects/peter-yang-podcast-prep/demo-folder/tools/image_gen" && python3 -c "
+   import sys; sys.path.insert(0, '.scripts')
+   from image_gen import generate
    generate('USER_PROMPT_HERE', output_name='descriptive_name')
    "
    ```
@@ -85,12 +87,12 @@ When the user asks you to generate an image:
 User: "Generate a hero image for the Moltbot landing page"
 
 Claude: [Runs generate with prompt, output_name="moltbot-hero"]
-Generated: outputs/moltbot-hero.png
+Generated: tools/image_gen/outputs/moltbot-hero.png
 
 User: "Make it more dynamic, add some motion blur"
 
 Claude: [Runs generate with refinement prompt, same output_name]
-Refined: outputs/moltbot-hero.png (updated)
+Refined: tools/image_gen/outputs/moltbot-hero.png (updated)
 
 User: "Actually go back to the previous version"
 
